@@ -1,0 +1,44 @@
+# Compila el APK del cliente Flutter de SpaceChat.
+#
+# Este repo es PÚBLICO y NO contiene el código fuente: el workflow descarga el
+# repo privado Sliu772/SpaceChat con el secreto SPACECHAT_TOKEN, compila ahí y
+# publica solo el APK como artefacto.
+name: Build APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repo privado
+        uses: actions/checkout@v4
+        with:
+          repository: Sliu772/SpaceChat
+          ref: ci/flutter-apk
+          token: ${{ secrets.SPACECHAT_TOKEN }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dependencias
+        working-directory: flutter_app
+        run: flutter pub get
+
+      - name: Compilar APK
+        working-directory: flutter_app
+        run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spacechat-android
+          path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
