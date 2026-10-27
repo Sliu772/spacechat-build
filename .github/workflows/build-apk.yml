@@ -159,12 +159,13 @@ jobs:
           name, build = sys.argv[1], sys.argv[2]
           base = "https://github.com/Sliu772/spacechat-build/releases/latest/download"
           android_notes = (
-              "Aviso de actualización con botón de descarga, acceso a versiones "
-              "recientes y mejoras de estabilidad en Android."
+              "Cierra el teclado al enviar o tocar fuera, avisos nativos de spam, "
+              "errores y Espacio Void, y panel de fuga del bot El_Espacio."
           )
           ios_notes = (
-              "IPA sin firma para instalar con AltStore o Sideloadly. Incluye el "
-              "mismo aviso de actualización y mejoras de estabilidad."
+              "Corrige el teclado que quedaba abierto en iOS, mejora el cierre al "
+              "salir de las WebView e incluye los avisos nativos del Espacio. "
+              "IPA sin firma: instálalo con AltStore o Sideloadly."
           )
           data = {
               "_help": (
