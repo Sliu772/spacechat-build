@@ -53,6 +53,18 @@ jobs:
         working-directory: flutter_app
         run: flutter build apk --release
 
+      - name: Verificar firma del APK
+        working-directory: flutter_app
+        shell: bash
+        run: |
+          set -e
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs build/app/outputs/flutter-apk/app-release.apk | tee certs.txt
+          if grep -q "CN=Android Debug" certs.txt; then
+            echo "::error::El APK se firmó con la clave debug. Revisa key.properties y spacechat-release.p12."
+            exit 1
+          fi
+
       - uses: actions/upload-artifact@v4
         with:
           name: spacechat-android
@@ -159,13 +171,16 @@ jobs:
           name, build = sys.argv[1], sys.argv[2]
           base = "https://github.com/Sliu772/spacechat-build/releases/latest/download"
           android_notes = (
-              "Cierra el teclado al enviar o tocar fuera, avisos nativos de spam, "
-              "errores y Espacio Void, y panel de fuga del bot El_Espacio."
+              "Corrige el personaje que desaparecía al cerrar sesión y volver a "
+              "entrar, hace visibles la corona y el escudo sobre el personaje y "
+              "evita que el teclado tape el campo al escribir. Firma estable: "
+              "desinstala la 1.2.1 una vez; las siguientes se instalan encima."
           )
           ios_notes = (
-              "Corrige el teclado que quedaba abierto en iOS, mejora el cierre al "
-              "salir de las WebView e incluye los avisos nativos del Espacio. "
-              "IPA sin firma: instálalo con AltStore o Sideloadly."
+              "Corrige el personaje que desaparecía al cerrar sesión y volver a "
+              "entrar, y hace visibles la corona y el escudo sobre el personaje. "
+              "Mantiene el cierre de teclado. IPA sin firma: instálalo con "
+              "AltStore o Sideloadly."
           )
           data = {
               "_help": (
@@ -193,13 +208,13 @@ jobs:
                   "version": name,
                   "build": int(build),
                   "url": "",
-                  "notes": "Mejoras de estabilidad y del aviso de actualización en escritorio.",
+                  "notes": "Incluye el arreglo de sesión y la corona/escudo visible sobre el personaje.",
               },
               "web": {
                   "version": name,
                   "build": int(build),
                   "url": "",
-                  "notes": "Mejoras de estabilidad y del aviso de actualización.",
+                  "notes": "Mejoras de estabilidad y avisos del servidor.",
               },
           }
           with open("out/version.json", "w", encoding="utf-8") as f:
