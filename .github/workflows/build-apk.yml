@@ -1,22 +1,38 @@
-# Compila el APK del cliente Flutter de SpaceChat.
+# Compila SpaceChat (Android + iOS) desde el repo privado y publica una
+# release descargable. Este repo es PÚBLICO y NO contiene el código fuente:
+# el workflow descarga Sliu772/SpaceChat con el secreto SPACECHAT_TOKEN.
 #
-# Este repo es PÚBLICO y NO contiene el código fuente: el workflow descarga el
-# repo privado Sliu772/SpaceChat con el secreto SPACECHAT_TOKEN, compila ahí y
-# publica solo el APK como artefacto.
-name: Build APK
+# La release incluye:
+#   - SpaceChat-android.apk  (instalable directamente)
+#   - SpaceChat-ios.ipa      (sin firma; AltStore/Sideloadly)
+#   - version.json           (manifiesto que consulta la app)
+#
+# Las URLs estables son:
+#   https://github.com/Sliu772/spacechat-build/releases/latest/download/SpaceChat-android.apk
+#   https://github.com/Sliu772/spacechat-build/releases/latest/download/SpaceChat-ios.ipa
+#   https://github.com/Sliu772/spacechat-build/releases/latest/download/version.json
+
+name: Build Android + iOS
 
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
+env:
+  PRIVATE_REPO: Sliu772/SpaceChat
+  PRIVATE_REF: ci/native
+
 jobs:
-  apk:
+  android:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout del repo privado
         uses: actions/checkout@v4
         with:
-          repository: Sliu772/SpaceChat
-          ref: ci/flutter-apk
+          repository: ${{ env.PRIVATE_REPO }}
+          ref: ${{ env.PRIVATE_REF }}
           token: ${{ secrets.SPACECHAT_TOKEN }}
 
       - uses: actions/setup-java@v4
@@ -42,3 +58,201 @@ jobs:
           name: spacechat-android
           path: flutter_app/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
+
+  ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout del repo privado
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.PRIVATE_REPO }}
+          ref: ${{ env.PRIVATE_REF }}
+          token: ${{ secrets.SPACECHAT_TOKEN }}
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dependencias
+        working-directory: flutter_app
+        run: flutter pub get
+
+      - name: Compilar iOS sin firma
+        working-directory: flutter_app
+        run: flutter build ios --release --no-codesign
+
+      - name: Empaquetar IPA
+        working-directory: flutter_app/build/ios/iphoneos
+        run: |
+          rm -rf Payload SpaceChat-ios.ipa
+          mkdir -p Payload
+          cp -R Runner.app Payload/
+          zip -qry SpaceChat-ios.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spacechat-ios
+          path: flutter_app/build/ios/iphoneos/SpaceChat-ios.ipa
+          if-no-files-found: error
+
+  release:
+    needs: [android, ios]
+    # Si una plataforma falla, publica igualmente la que sí compiló.
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Descargar APK
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: spacechat-android
+          path: release
+
+      - name: Descargar IPA
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: spacechat-ios
+          path: release
+
+      - name: Preparar assets y manifiesto
+        id: prep
+        shell: bash
+        env:
+          SPACECHAT_TOKEN: ${{ secrets.SPACECHAT_TOKEN }}
+        run: |
+          set -e
+          mkdir -p out
+          if [ -f release/app-release.apk ]; then
+            cp release/app-release.apk out/SpaceChat-android.apk
+          fi
+          if [ -f release/SpaceChat-ios.ipa ]; then
+            cp release/SpaceChat-ios.ipa out/SpaceChat-ios.ipa
+          fi
+          if [ ! -f out/SpaceChat-android.apk ] && [ ! -f out/SpaceChat-ios.ipa ]; then
+            echo "No se generó ningún artefacto; no se publica release." >&2
+            exit 1
+          fi
+
+          git clone --depth 1 --branch "$PRIVATE_REF" \
+            "https://x-access-token:${SPACECHAT_TOKEN}@github.com/${PRIVATE_REPO}.git" _src
+
+          VERSION=$(grep -m1 '^version:' _src/flutter_app/pubspec.yaml | awk '{print $2}')
+          NAME=${VERSION%%+*}
+          BUILD=${VERSION##*+}
+          if [ -z "$NAME" ] || [ -z "$BUILD" ]; then
+            echo "No se pudo leer la versión de pubspec.yaml" >&2
+            exit 1
+          fi
+          echo "version=$NAME" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+          echo "tag=v${NAME}-${BUILD}" >> "$GITHUB_OUTPUT"
+
+          python3 - "$NAME" "$BUILD" <<'PY'
+          import json
+          import os
+          import sys
+
+          name, build = sys.argv[1], sys.argv[2]
+          base = "https://github.com/Sliu772/spacechat-build/releases/latest/download"
+          android_notes = (
+              "Aviso de actualización con botón de descarga, acceso a versiones "
+              "recientes y mejoras de estabilidad en Android."
+          )
+          ios_notes = (
+              "IPA sin firma para instalar con AltStore o Sideloadly. Incluye el "
+              "mismo aviso de actualización y mejoras de estabilidad."
+          )
+          data = {
+              "_help": (
+                  "Manifiesto de versiones. Actions actualiza este archivo y lo "
+                  "publica como asset de la release latest. La app compara build "
+                  "primero y luego version. Si url esta vacia solo muestra el aviso."
+              ),
+              "android": {
+                  "version": name,
+                  "build": int(build),
+                  "url": f"{base}/SpaceChat-android.apk"
+                  if os.path.exists("out/SpaceChat-android.apk")
+                  else "",
+                  "notes": android_notes,
+              },
+              "ios": {
+                  "version": name,
+                  "build": int(build),
+                  "url": f"{base}/SpaceChat-ios.ipa"
+                  if os.path.exists("out/SpaceChat-ios.ipa")
+                  else "",
+                  "notes": ios_notes,
+              },
+              "windows": {
+                  "version": name,
+                  "build": int(build),
+                  "url": "",
+                  "notes": "Mejoras de estabilidad y del aviso de actualización en escritorio.",
+              },
+              "web": {
+                  "version": name,
+                  "build": int(build),
+                  "url": "",
+                  "notes": "Mejoras de estabilidad y del aviso de actualización.",
+              },
+          }
+          with open("out/version.json", "w", encoding="utf-8") as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+              f.write("\n")
+          PY
+
+          cp out/version.json version.json
+
+      - name: Publicar release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.prep.outputs.tag }}"
+          VERSION="${{ steps.prep.outputs.version }}"
+          BUILD="${{ steps.prep.outputs.build }}"
+          FILES=(out/version.json)
+          if [ -f out/SpaceChat-android.apk ]; then
+            FILES+=(out/SpaceChat-android.apk)
+          fi
+          if [ -f out/SpaceChat-ios.ipa ]; then
+            FILES+=(out/SpaceChat-ios.ipa)
+          fi
+
+          cat > release-notes.md <<EOF
+          Compilación automática de SpaceChat **v${VERSION} (${BUILD})**.
+
+          - **Android:** APK instalable.
+          - **iOS:** IPA sin firma; instálalo con AltStore o Sideloadly.
+          - **version.json:** manifiesto que usa la app para avisar de actualizaciones.
+
+          Las URLs \`releases/latest/download/...\` siempre apuntan a esta entrega.
+          EOF
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${FILES[@]}" --clobber
+            gh release edit "$TAG" --title "SpaceChat v${VERSION} (${BUILD})" --notes-file release-notes.md --latest
+          else
+            gh release create "$TAG" "${FILES[@]}" \
+              --title "SpaceChat v${VERSION} (${BUILD})" \
+              --notes-file release-notes.md \
+              --latest
+          fi
+
+      - name: Actualizar version.json del repo
+        shell: bash
+        run: |
+          git add version.json
+          if git diff --cached --quiet -- version.json; then
+            echo "version.json ya estaba actualizado."
+            exit 0
+          fi
+          git config user.name "SpaceChat Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git commit -m "Actualiza version.json a ${{ steps.prep.outputs.version }} (${{ steps.prep.outputs.build }})"
+          git push
