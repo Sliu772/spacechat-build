@@ -1,27 +1,27 @@
 {
   "_help": "Manifiesto de versiones. Actions actualiza este archivo y lo publica como asset de la release latest. La app compara build primero y luego version. Si url esta vacia solo muestra el aviso.",
   "android": {
-    "version": "1.2.1",
-    "build": 4,
+    "version": "1.2.2",
+    "build": 5,
     "url": "https://github.com/Sliu772/spacechat-build/releases/latest/download/SpaceChat-android.apk",
-    "notes": "Cierra el teclado al enviar o tocar fuera, avisos nativos de spam, errores y Espacio Void, y panel de fuga del bot El_Espacio."
+    "notes": "Corrige el personaje que desaparecía al cerrar sesión y volver a entrar, hace visibles la corona y el escudo sobre el personaje y evita que el teclado tape el campo al escribir. Firma estable: desinstala la 1.2.1 una vez; las siguientes se instalan encima."
   },
   "ios": {
-    "version": "1.2.1",
-    "build": 4,
+    "version": "1.2.2",
+    "build": 5,
     "url": "https://github.com/Sliu772/spacechat-build/releases/latest/download/SpaceChat-ios.ipa",
-    "notes": "Corrige el teclado que quedaba abierto en iOS, mejora el cierre al salir de las WebView e incluye los avisos nativos del Espacio. IPA sin firma: instálalo con AltStore o Sideloadly."
+    "notes": "Corrige el personaje que desaparecía al cerrar sesión y volver a entrar, y hace visibles la corona y el escudo sobre el personaje. Mantiene el cierre de teclado. IPA sin firma: instálalo con AltStore o Sideloadly."
   },
   "windows": {
-    "version": "1.2.1",
-    "build": 4,
+    "version": "1.2.2",
+    "build": 5,
     "url": "",
-    "notes": "Mejoras de estabilidad y del aviso de actualización en escritorio."
+    "notes": "Incluye el arreglo de sesión y la corona/escudo visible sobre el personaje."
   },
   "web": {
-    "version": "1.2.1",
-    "build": 4,
+    "version": "1.2.2",
+    "build": 5,
     "url": "",
-    "notes": "Mejoras de estabilidad y del aviso de actualización."
+    "notes": "Mejoras de estabilidad y avisos del servidor."
   }
 }
