@@ -1,27 +1,27 @@
 {
   "_help": "Manifiesto de versiones. Actions actualiza este archivo y lo publica como asset de la release latest. La app compara build primero y luego version. Si url esta vacia solo muestra el aviso.",
   "android": {
-    "version": "1.2.2",
-    "build": 5,
+    "version": "1.2.3",
+    "build": 6,
     "url": "https://github.com/Sliu772/spacechat-build/releases/latest/download/SpaceChat-android.apk",
-    "notes": "Corrige el personaje que desaparecía al cerrar sesión y volver a entrar, hace visibles la corona y el escudo sobre el personaje y evita que el teclado tape el campo al escribir. Firma estable: desinstala la 1.2.1 una vez; las siguientes se instalan encima."
+    "notes": "Añade la colección de items (auras, coronas, mascotas, marcos e insignias), con catálogo, compra y equipado visible en la sala. Unifica el tema de las pantallas del servidor y mejora el comportamiento en móvil, WebView e iframe. Mantiene los arreglos de sesión, corona/escudo y teclado."
   },
   "ios": {
-    "version": "1.2.2",
-    "build": 5,
+    "version": "1.2.3",
+    "build": 6,
     "url": "https://github.com/Sliu772/spacechat-build/releases/latest/download/SpaceChat-ios.ipa",
-    "notes": "Corrige el personaje que desaparecía al cerrar sesión y volver a entrar, y hace visibles la corona y el escudo sobre el personaje. Mantiene el cierre de teclado. IPA sin firma: instálalo con AltStore o Sideloadly."
+    "notes": "Añade la colección de items y los cosméticos equipados en la sala, y unifica el tema de las pantallas del servidor para WebView e iframe. Mantiene el cierre de teclado. IPA sin firma: instálalo con AltStore o Sideloadly."
   },
   "windows": {
-    "version": "1.2.2",
-    "build": 5,
+    "version": "1.2.3",
+    "build": 6,
     "url": "",
-    "notes": "Incluye el arreglo de sesión y la corona/escudo visible sobre el personaje."
+    "notes": "Incluye la colección de items, los cosméticos visibles en la sala y el tema unificado de las pantallas del servidor."
   },
   "web": {
-    "version": "1.2.2",
-    "build": 5,
+    "version": "1.2.3",
+    "build": 6,
     "url": "",
-    "notes": "Mejoras de estabilidad y avisos del servidor."
+    "notes": "Mejoras de compatibilidad de las pantallas EJS en navegador, WebView e iframe."
   }
 }

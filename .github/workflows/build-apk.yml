@@ -171,16 +171,17 @@ jobs:
           name, build = sys.argv[1], sys.argv[2]
           base = "https://github.com/Sliu772/spacechat-build/releases/latest/download"
           android_notes = (
-              "Corrige el personaje que desaparecía al cerrar sesión y volver a "
-              "entrar, hace visibles la corona y el escudo sobre el personaje y "
-              "evita que el teclado tape el campo al escribir. Firma estable: "
-              "desinstala la 1.2.1 una vez; las siguientes se instalan encima."
+              "Añade la colección de items (auras, coronas, mascotas, marcos e "
+              "insignias), con catálogo, compra y equipado visible en la sala. "
+              "Unifica el tema de las pantallas del servidor y mejora el "
+              "comportamiento en móvil, WebView e iframe. Mantiene los arreglos "
+              "de sesión, corona/escudo y teclado."
           )
           ios_notes = (
-              "Corrige el personaje que desaparecía al cerrar sesión y volver a "
-              "entrar, y hace visibles la corona y el escudo sobre el personaje. "
-              "Mantiene el cierre de teclado. IPA sin firma: instálalo con "
-              "AltStore o Sideloadly."
+              "Añade la colección de items y los cosméticos equipados en la "
+              "sala, y unifica el tema de las pantallas del servidor para "
+              "WebView e iframe. Mantiene el cierre de teclado. IPA sin firma: "
+              "instálalo con AltStore o Sideloadly."
           )
           data = {
               "_help": (
@@ -208,13 +209,20 @@ jobs:
                   "version": name,
                   "build": int(build),
                   "url": "",
-                  "notes": "Incluye el arreglo de sesión y la corona/escudo visible sobre el personaje.",
+                  "notes": (
+                      "Incluye la colección de items, los cosméticos visibles "
+                      "en la sala y el tema unificado de las pantallas del "
+                      "servidor."
+                  ),
               },
               "web": {
                   "version": name,
                   "build": int(build),
                   "url": "",
-                  "notes": "Mejoras de estabilidad y avisos del servidor.",
+                  "notes": (
+                      "Mejoras de compatibilidad de las pantallas EJS en "
+                      "navegador, WebView e iframe."
+                  ),
               },
           }
           with open("out/version.json", "w", encoding="utf-8") as f:
